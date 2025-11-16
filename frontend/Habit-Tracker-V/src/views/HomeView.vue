@@ -25,13 +25,6 @@ onMounted(async () => {
 
 <template>
   <main>
-    <h1>Habit Tracker Startseite</h1>
-    <p>
-      <strong>Status der Backend-Verbindung:</strong>
-    </p>
-    <p style="font-family: monospace; background-color: #eee; padding: 10px;">
-      {{ backendMessage }}
-    </p>
   </main>
   <p style="font-family: monospace; background-color: #eee; padding: 10px; color: #333;">
   {{ backendMessage }}
