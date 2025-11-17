@@ -1,20 +1,33 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+// Lade den Pinia Store
+import { useAuthStore } from '@/stores/auth'
+
+// Erstelle eine Instanz des Stores
+const authStore = useAuthStore()
+
+// Eine Funktion, die den Logout im Store aufruft
+const handleLogout = () => {
+  authStore.logout()
+}
 </script>
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
     <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/register">Registrierung</RouterLink>
-        <RouterLink to="/login">Login</RouterLink>
+
+        <template v-if="!authStore.isAuthenticated">
+          <RouterLink to="/register">Registrierung</RouterLink>
+          <RouterLink to="/login">Login</RouterLink>
+        </template>
+
+        <template v-else>
+          <RouterLink to="/dashboard">Dashboard</RouterLink>
+          <a href="#" @click.prevent="handleLogout">Logout</a>
+        </template>
       </nav>
     </div>
   </header>
@@ -58,6 +71,7 @@ nav a:first-of-type {
   border: 0;
 }
 
+/* Styles für Desktop (aus der Vue-Vorlage) */
 @media (min-width: 1024px) {
   header {
     display: flex;
@@ -79,7 +93,6 @@ nav a:first-of-type {
     text-align: left;
     margin-left: -1rem;
     font-size: 1rem;
-
     padding: 1rem 0;
     margin-top: 1rem;
   }
