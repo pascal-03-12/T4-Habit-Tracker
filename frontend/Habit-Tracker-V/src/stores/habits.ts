@@ -36,7 +36,7 @@ export const useHabitStore = defineStore('habits', () => {
       });
       if (res.ok) {
         const rawData = await res.json() as RawHabit[];
-        
+        // Safety-Mapping: Verhindert Abstürze bei fehlenden daten
         habits.value = rawData.map((h) => ({
           id: h.id,
           name: h.name,
@@ -44,9 +44,7 @@ export const useHabitStore = defineStore('habits', () => {
           type: (h.type === 'positive' || h.type === 'negative') ? (h.type as 'positive' | 'negative') : 'positive'
         }));
       }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   }
 
   async function addHabit(name: string, type: 'positive' | 'negative') {
@@ -59,15 +57,12 @@ export const useHabitStore = defineStore('habits', () => {
       });
       if (res.ok) {
         const newHabit = await res.json() as RawHabit;
-        
-        const cleanHabit: Habit = {
+        habits.value.push({
           id: newHabit.id,
           name: newHabit.name,
           type: (newHabit.type === 'negative') ? 'negative' : 'positive',
           entries: []
-        };
-        
-        habits.value.push(cleanHabit);
+        });
       }
     } catch (err) { console.error(err); }
   }
@@ -87,19 +82,15 @@ export const useHabitStore = defineStore('habits', () => {
 
   async function trackHabit(habitId: string, status: 'done' | 'failed') {
     if (!authStore.token) return;
-
     const today = getTodayString();
-
     try {
       const res = await fetch(`/api/habits/${habitId}/entries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` },
         body: JSON.stringify({ date: today, status })
       });
-
       if (res.ok) {
         const newEntry = await res.json() as Entry;
-        
         const habit = habits.value.find(h => h.id === habitId);
         if (habit) {
           if (!Array.isArray(habit.entries)) habit.entries = [];
