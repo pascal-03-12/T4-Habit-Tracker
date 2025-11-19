@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-// Reaktive Variablen für die Formulardaten
 const email = ref('');
 const password = ref('');
 
-// Eine Nachricht für den Benutzer (Erfolg oder Fehler)
 const message = ref('');
 
-// Funktion, die beim Absenden des Formulars aufgerufen wird
 const handleRegister = async () => {
   try {
     message.value = 'Registrierung wird durchgeführt...';
@@ -18,7 +15,6 @@ const handleRegister = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      // Wir senden die Daten als JSON-String
       body: JSON.stringify({
         email: email.value,
         password: password.value,
@@ -28,12 +24,9 @@ const handleRegister = async () => {
     const data = await response.json();
 
     if (!response.ok) {
-      // Zeige die Fehlermeldung vom Backend (z.B. "Benutzer existiert schon")
       message.value = `Fehler: ${data.message}`;
     } else {
-      // Zeige die Erfolgsmeldung vom Backend
       message.value = `Erfolg: ${data.message}`;
-      // Formular leeren
       email.value = '';
       password.value = '';
     }

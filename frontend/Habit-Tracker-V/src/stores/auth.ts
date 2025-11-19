@@ -11,10 +11,8 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = storedToken;
   }
 
-  // GETTERS
   const isAuthenticated = computed(() => !!token.value) 
 
-  // ACTIONS
   function login(newToken: string) {
     token.value = newToken
     localStorage.setItem('authToken', newToken) 
@@ -24,7 +22,6 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     localStorage.removeItem('authToken')
 
-    // Nach dem Logout zur Login-Seite weiterleiten
     router.push('/login') 
     console.log("Erfolgreich ausgeloggt.");
   }

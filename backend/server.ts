@@ -7,44 +7,33 @@ const kv = await Deno.openKv();
 const app = new Application();
 const router = new Router();
 
-// JWT Setup
 const JWT_SECRET_KEY = await crypto.subtle.generateKey(
   { name: "HMAC", hash: "SHA-512" },
   true,
   ["sign", "verify"],
 );
 
-// --- HILFSFUNKTION: Auth prüfen ---
-// Versucht User-ID aus dem Token zu lesen.
-// Wirft Fehler, wenn kein gültiges Token da ist.
 async function getUserIdFromContext(ctx: Context): Promise<string> {
   const authHeader = ctx.request.headers.get("Authorization");
-  if (!authHeader) {
-    throw new Error("Kein Token vorhanden");
-  }
-  const token = authHeader.split(" ")[1]; 
-  if (!token) {
-    throw new Error("Token-Format ungültig");
-  }
+  if (!authHeader) throw new Error("Kein Token vorhanden");
+  const token = authHeader.split(" ")[1];
+  if (!token) throw new Error("Token-Format ungültig");
   const payload = await verify(token, JWT_SECRET_KEY);
-  return payload.sub as string; 
+  return payload.sub as string;
 }
 
-
-// --- API ENDPUNKTE ---
 
 router.get("/api/test", (ctx) => {
   ctx.response.body = { message: "Hallo vom Deno-Backend!" };
 });
 
-// REGISTER
 router.post("/api/register", async (ctx) => {
   try {
     const body = await ctx.request.body({ type: "json" }).value;
     const { email, password } = body;
     if (!email || !password || password.length < 6) {
       ctx.response.status = 400;
-      ctx.response.body = { message: "Ungültige Daten (Passwort min 6 Zeichen)." };
+      ctx.response.body = { message: "Ungültige Daten." };
       return;
     }
     const userEntry = await kv.get(["users", email]);
@@ -56,7 +45,6 @@ router.post("/api/register", async (ctx) => {
     const hashedPassword = await bcrypt.hash(password);
     const userId = crypto.randomUUID();
     const user = { id: userId, email, hashedPassword };
-    
     await kv.set(["users", email], user);
     ctx.response.status = 201;
     ctx.response.body = { message: "Registriert!", userId };
@@ -66,7 +54,6 @@ router.post("/api/register", async (ctx) => {
   }
 });
 
-//LOGIN
 router.post("/api/login", async (ctx) => {
   try {
     const body = await ctx.request.body({ type: "json" }).value;
@@ -92,101 +79,106 @@ router.post("/api/login", async (ctx) => {
   }
 });
 
-// HABITS LADEN (GET)
 router.get("/api/habits", async (ctx) => {
   try {
-    // Wer fragt? (Auth Check)
     const userId = await getUserIdFromContext(ctx);
-
-    // Daten aus DB holen (Nur Habits DIESES Users)
-    const entries = kv.list({ prefix: ["habits", userId] });
+    
+    const iter = kv.list({ prefix: ["habits", userId] });
     const habits = [];
-    for await (const entry of entries) {
-      habits.push(entry.value);
+    
+    for await (const entry of iter) {
+      const habit = entry.value as any;
+      
+      const entriesIter = kv.list({ prefix: ["entries", habit.id] });
+      const entries = [];
+      for await (const e of entriesIter) {
+        entries.push(e.value);
+      }
+      
+      habit.entries = entries;
+      habits.push(habit);
     }
 
     ctx.response.body = habits;
   } catch (err) {
     ctx.response.status = 401;
-    ctx.response.body = { message: "Nicht autorisiert" };
   }
 });
 
-//HABIT ERSTELLEN (POST)
 router.post("/api/habits", async (ctx) => {
   try {
-    // (Auth Check)
     const userId = await getUserIdFromContext(ctx);
-
-    // Daten lesen
     const body = await ctx.request.body({ type: "json" }).value;
-    const { name, type } = body; 
-
+    const { name, type } = body;
     if (!name) {
-      ctx.response.status = 400;
-      ctx.response.body = { message: "Name fehlt." };
-      return;
+      ctx.response.status = 400; return;
     }
-
-    // Speichern
     const habitId = crypto.randomUUID();
     const newHabit = {
       id: habitId,
-      userId: userId, 
+      userId: userId,
       name: name,
-      type: type || "positive", 
-      createdAt: new Date().toISOString()
+      type: type || "positive",
+      createdAt: new Date().toISOString(),
+      entries: [] 
     };
-
-    // Schlüssel: ["habits", userId, habitId]
-    // finden alle Habits eines Users
     await kv.set(["habits", userId, habitId], newHabit);
-
     ctx.response.status = 201;
     ctx.response.body = newHabit;
-
   } catch (err) {
     console.error(err);
     ctx.response.status = 401;
-    ctx.response.body = { message: "Nicht autorisiert" };
   }
 });
-
-// --- START ---
-app.use(oakCors({ origin: "http://localhost:5173" }));
-app.use(router.routes());
-app.use(router.allowedMethods());
 
 router.delete("/api/habits/:id", async (ctx) => {
   try {
     const userId = await getUserIdFromContext(ctx);
     const habitId = ctx.params.id;
-
-    if (!habitId) {
-      ctx.response.status = 400;
-      return;
-    }
-
-
     const key = ["habits", userId, habitId];
-
     const entry = await kv.get(key);
     if (!entry.value) {
-      ctx.response.status = 404; 
-      ctx.response.body = { message: "Habit nicht gefunden." };
-      return;
+      ctx.response.status = 404; return;
     }
-
     await kv.delete(key);
 
     ctx.response.status = 200;
     ctx.response.body = { message: "Gelöscht" };
-
   } catch (err) {
     console.error(err);
     ctx.response.status = 401;
   }
 });
+
+router.post("/api/habits/:id/entries", async (ctx) => {
+  try {
+    await getUserIdFromContext(ctx); 
+    const habitId = ctx.params.id;
+
+    const body = await ctx.request.body({ type: "json" }).value;
+    const { date, status } = body;
+
+    if (!date || !status) {
+      ctx.response.status = 400;
+      ctx.response.body = { message: "Datum und Status erforderlich" };
+      return;
+    }
+    const entry = { habitId, date, status };
+
+    await kv.set(["entries", habitId, date], entry);
+
+    ctx.response.status = 201;
+    ctx.response.body = entry;
+
+  } catch (err) {
+    console.error(err);
+    ctx.response.status = 500;
+  }
+});
+
+app.use(oakCors({ origin: "http://localhost:5173" }));
+app.use(router.routes());
+app.use(router.allowedMethods());
 
 console.log("Backend-Server startet auf http://localhost:8000 ...");
 await app.listen({ port: 8000 });

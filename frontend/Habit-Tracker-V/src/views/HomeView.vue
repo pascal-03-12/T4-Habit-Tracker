@@ -5,7 +5,6 @@ const backendMessage = ref('Lade Daten vom Backend...');
 
 onMounted(async () => {
   try {
-    // Dieser 'fetch' geht zu deinem Deno-Backend auf Port 8000
     const response = await fetch('http://localhost:8000/api/test');
 
     if (!response.ok) {
@@ -13,7 +12,6 @@ onMounted(async () => {
     }
 
     const data = await response.json();
-    // Hier wird die Nachricht "Hallo vom Deno-Backend!" gespeichert
     backendMessage.value = data.message; 
 
   } catch (error) {

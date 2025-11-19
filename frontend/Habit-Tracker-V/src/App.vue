@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-// Lade den Pinia Store
 import { useAuthStore } from '@/stores/auth'
 
-// Erstelle eine Instanz des Stores
 const authStore = useAuthStore()
 
-// Eine Funktion, die den Logout im Store aufruft
 const handleLogout = () => {
   authStore.logout()
 }
@@ -71,7 +68,6 @@ nav a:first-of-type {
   border: 0;
 }
 
-/* Styles für Desktop (aus der Vue-Vorlage) */
 @media (min-width: 1024px) {
   header {
     display: flex;

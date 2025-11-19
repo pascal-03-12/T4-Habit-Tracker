@@ -1,4 +1,3 @@
-// src/router/index.ts
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import RegisterView from '../views/RegisterView.vue'
@@ -17,31 +16,23 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView,
-      // der "Wächter" (Navigation Guard)
       meta: { requiresAuth: true } 
     }
   ]
 })
 
-// NEU: Der globale "Navigations-Wächter"
-// Diese Funktion wird VOR JEDEM Seitenwechsel ausgeführt
 router.beforeEach((to, from, next) => {
-  // Prüfe, ob die Ziel-Seite "meta: { requiresAuth: true }" hat
   if (to.meta.requiresAuth) {
 
-    // Wir müssen den Store *innerhalb* dieser Funktion initialisieren
     const authStore = useAuthStore() 
 
     if (authStore.isAuthenticated) {
-      // Fall 1: Benutzer ist eingeloggt -> Alles gut, lade die Seite
       next()
     } else {
-      // Fall 2: Benutzer ist NICHT eingeloggt -> Wirf ihn zur Login-Seite
       console.log("Zugriff verweigert. Leite zum Login weiter.");
       next('/login')
     }
   } else {
-    // Fall 3: Die Seite erfordert keinen Login (z.B. Home, Login) -> Lade sie einfach
     next()
   }
 })
