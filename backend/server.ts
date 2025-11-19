@@ -9,7 +9,18 @@ const router = new Router();
 
 const SALT = "habit-app-salt-v1";
 
-// hashing wegen deno
+const STATIC_SECRET = "dies-ist-ein-sehr-geheimer-schluessel-fuer-das-projekt-t4-12345";
+
+const encoder = new TextEncoder();
+const keyBuf = encoder.encode(STATIC_SECRET);
+const JWT_SECRET_KEY = await crypto.subtle.importKey(
+  "raw", 
+  keyBuf, 
+  { name: "HMAC", hash: "SHA-512" }, 
+  true, 
+  ["sign", "verify"]
+);
+
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password + SALT);
@@ -24,12 +35,6 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
   return newHash === hash;
 }
 
-const JWT_SECRET_KEY = await crypto.subtle.generateKey(
-  { name: "HMAC", hash: "SHA-512" },
-  true,
-  ["sign", "verify"],
-);
-
 async function getUserIdFromContext(ctx: Context): Promise<string> {
   const authHeader = ctx.request.headers.get("Authorization");
   if (!authHeader) throw new Error("No token provided");
@@ -40,7 +45,7 @@ async function getUserIdFromContext(ctx: Context): Promise<string> {
 }
 
 router.get("/api/test", (ctx) => {
-  ctx.response.body = { message: "Backend is running" };
+  ctx.response.body = { message: "Backend is running stable" };
 });
 
 router.post("/api/register", async (ctx) => {
@@ -208,10 +213,4 @@ app.use(async (ctx) => {
       await send(ctx, "index.html", {
         root: `${Deno.cwd()}/frontend/Habit-Tracker-V/dist`,
       });
-    } catch (e) {
-    }
-  }
-});
-
-console.log("Server running on port 8000");
-await app.listen({ port: 8000 });
+    } catch (
