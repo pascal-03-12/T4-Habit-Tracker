@@ -15,6 +15,13 @@ export interface Habit {
   entries: Entry[]; 
 }
 
+interface RawHabit {
+  id: string;
+  name: string;
+  type?: string;
+  entries?: Entry[];
+}
+
 export const useHabitStore = defineStore('habits', () => {
   const habits = ref<Habit[]>([]);
   const authStore = useAuthStore();
@@ -28,10 +35,17 @@ export const useHabitStore = defineStore('habits', () => {
         headers: { 'Authorization': `Bearer ${authStore.token}` }
       });
       if (res.ok) {
-        habits.value = await res.json();
+        const rawData = await res.json() as RawHabit[];
+        
+        habits.value = rawData.map((h) => ({
+          id: h.id,
+          name: h.name,
+          entries: Array.isArray(h.entries) ? h.entries : [],
+          type: (h.type === 'positive' || h.type === 'negative') ? (h.type as 'positive' | 'negative') : 'positive'
+        }));
       }
     } catch (err) {
-      console.error("Fehler beim Laden", err);
+      console.error(err);
     }
   }
 
@@ -44,9 +58,16 @@ export const useHabitStore = defineStore('habits', () => {
         body: JSON.stringify({ name, type })
       });
       if (res.ok) {
-        const newHabit = await res.json();
-        newHabit.entries = []; 
-        habits.value.push(newHabit);
+        const newHabit = await res.json() as RawHabit;
+        
+        const cleanHabit: Habit = {
+          id: newHabit.id,
+          name: newHabit.name,
+          type: (newHabit.type === 'negative') ? 'negative' : 'positive',
+          entries: []
+        };
+        
+        habits.value.push(cleanHabit);
       }
     } catch (err) { console.error(err); }
   }
@@ -70,22 +91,22 @@ export const useHabitStore = defineStore('habits', () => {
     const today = getTodayString();
 
     try {
-      const res = await fetch(`http://localhost:8000/api/habits/${habitId}/entries`, {
+      const res = await fetch(`/api/habits/${habitId}/entries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` },
         body: JSON.stringify({ date: today, status })
       });
 
       if (res.ok) {
-        const newEntry = await res.json();
+        const newEntry = await res.json() as Entry;
         
         const habit = habits.value.find(h => h.id === habitId);
         if (habit) {
-          if (!habit.entries) habit.entries = [];
+          if (!Array.isArray(habit.entries)) habit.entries = [];
           habit.entries.push(newEntry);
         }
       }
-    } catch (err) { console.error("Tracking Fehler", err); }
+    } catch (err) { console.error(err); }
   }
 
   return { habits, fetchHabits, addHabit, deleteHabit, trackHabit, getTodayString };

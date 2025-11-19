@@ -12,16 +12,16 @@ onMounted(() => {
 
 const createHabit = async () => {
   if (!newHabitName.value) return;
-  
   await habitStore.addHabit(newHabitName.value, newHabitType.value);
-  
   newHabitName.value = '';
   newHabitType.value = 'positive';
 };
 
+// FIX: Diese Funktion ist jetzt sicher gegen Abstürze
 const isDoneToday = (habit: Habit) => {
+  if (!habit || !habit.entries || !Array.isArray(habit.entries)) return false;
   const today = habitStore.getTodayString();
-  return habit.entries && habit.entries.some((e) => e.date === today);
+  return habit.entries.some((e) => e.date === today);
 };
 </script>
 
@@ -73,7 +73,7 @@ const isDoneToday = (habit: Habit) => {
           <div class="habit-actions">
             
             <div v-if="isDoneToday(habit)" class="status-done">
-              ✅ Ist erledigt!
+              ✅ Erledigt!
             </div>
 
             <div v-else>
@@ -86,7 +86,7 @@ const isDoneToday = (habit: Habit) => {
               </button>
               
               <button 
-                v-else 
+                v-else-if="habit.type === 'negative'" 
                 @click="habitStore.trackHabit(habit.id, 'done')"
                 class="track-btn negative"
               >
@@ -112,8 +112,8 @@ const isDoneToday = (habit: Habit) => {
   flex-direction: column; 
   gap: 10px; 
   margin-bottom: 2rem; 
-  background: #222;
-  padding: 15px;
+  background: #222; 
+  padding: 15px; 
   border-radius: 8px;
 }
 
