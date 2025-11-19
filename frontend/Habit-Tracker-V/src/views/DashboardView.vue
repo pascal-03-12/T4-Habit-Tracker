@@ -12,8 +12,11 @@ onMounted(() => {
 
 const createHabit = async () => {
   if (!newHabitName.value) return;
+  
   await habitStore.addHabit(newHabitName.value, newHabitType.value);
+  
   newHabitName.value = '';
+  newHabitType.value = 'positive';
 };
 
 const isDoneToday = (habit: Habit) => {
@@ -31,14 +34,22 @@ const isDoneToday = (habit: Habit) => {
       <form @submit.prevent="createHabit" class="habit-form">
         <input 
           v-model="newHabitName" 
-          placeholder="z.B. Lesen, Joggen..." 
+          placeholder="Habit Name (z.B. Lesen)" 
           required
         />
-        <select v-model="newHabitType">
-          <option value="positive">Positiv (Tun)</option>
-          <option value="negative">Negativ (Lassen)</option>
-        </select>
-        <button type="submit">Hinzufügen</button>
+        
+        <div class="type-selector">
+          <label class="radio-label positive">
+            <input type="radio" value="positive" v-model="newHabitType" />
+            Ziel (Tun)
+          </label>
+          <label class="radio-label negative">
+            <input type="radio" value="negative" v-model="newHabitType" />
+            Verzicht (Lassen)
+          </label>
+        </div>
+
+        <button type="submit" class="add-btn">Hinzufügen</button>
       </form>
     </section>
 
@@ -62,7 +73,7 @@ const isDoneToday = (habit: Habit) => {
           <div class="habit-actions">
             
             <div v-if="isDoneToday(habit)" class="status-done">
-              ✅ Erledigt für heute!
+              ✅ Ist erledigt!
             </div>
 
             <div v-else>
@@ -71,7 +82,7 @@ const isDoneToday = (habit: Habit) => {
                 @click="habitStore.trackHabit(habit.id, 'done')"
                 class="track-btn positive"
               >
-                Erledigt!
+                ✅ Abhaken
               </button>
               
               <button 
@@ -79,7 +90,7 @@ const isDoneToday = (habit: Habit) => {
                 @click="habitStore.trackHabit(habit.id, 'done')"
                 class="track-btn negative"
               >
-                Geschafft (Verzicht)!
+                ⛔ Verzicht eintragen
               </button>
             </div>
 
@@ -95,14 +106,35 @@ const isDoneToday = (habit: Habit) => {
 
 <style scoped>
 .dashboard { max-width: 800px; margin: 0 auto; padding: 1rem; }
-.habit-form { display: flex; gap: 10px; margin-bottom: 2rem; }
-input { flex-grow: 1; padding: 8px; }
-select, button { padding: 8px; }
+
+.habit-form { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+  margin-bottom: 2rem; 
+  background: #222;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+@media (min-width: 600px) {
+  .habit-form { flex-direction: row; align-items: center; }
+}
+
+input[type="text"] { flex-grow: 1; padding: 10px; border-radius: 4px; border: 1px solid #555; background: #333; color: white; }
+
+.type-selector { display: flex; gap: 15px; }
+.radio-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.9rem; }
+.radio-label.positive { color: #81c784; }
+.radio-label.negative { color: #e57373; }
+
+.add-btn { padding: 10px 20px; background: #eee; color: #333; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.add-btn:hover { background: white; }
 
 ul { list-style: none; padding: 0; }
 .habit-card {
-  background: #222;
-  border: 1px solid #444;
+  background: #1e1e1e;
+  border: 1px solid #333;
   padding: 1rem;
   margin-bottom: 10px;
   border-radius: 8px;
@@ -112,38 +144,22 @@ ul { list-style: none; padding: 0; }
   color: #eee;
 }
 
-.habit-info { display: flex; align-items: center; gap: 10px; flex: 1; }
-.badge { font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-.badge.positive { background-color: #2e7d32; color: white; }
-.badge.negative { background-color: #c62828; color: white; }
-
-.habit-actions { display: flex; align-items: center; gap: 15px; }
-
-.track-btn {
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-weight: bold;
-  border-radius: 4px;
-}
-.track-btn.positive { background-color: #2e7d32; } 
-.track-btn.positive:hover { background-color: #1b5e20; }
-
-.track-btn.negative { background-color: #1976d2; } 
-.track-btn.negative:hover { background-color: #0d47a1; }
-
-.status-done {
-  color: #4caf50;
-  font-weight: bold;
+.habit-info { display: flex; flex-direction: column; gap: 5px; }
+@media (min-width: 600px) {
+  .habit-info { flex-direction: row; align-items: center; gap: 15px; }
 }
 
-.delete-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-  padding: 0;
-  opacity: 0.5;
-}
+.badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge.positive { background-color: #1b5e20; color: #a5d6a7; border: 1px solid #2e7d32; }
+.badge.negative { background-color: #b71c1c; color: #ef9a9a; border: 1px solid #c62828; }
+
+.habit-actions { display: flex; align-items: center; gap: 10px; }
+
+.track-btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; color: white; }
+.track-btn.positive { background-color: #2e7d32; }
+.track-btn.negative { background-color: #1565c0; }
+
+.status-done { color: #66bb6a; font-weight: bold; border: 1px solid #66bb6a; padding: 5px 10px; border-radius: 4px; }
+.delete-icon { background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.7; }
 .delete-icon:hover { opacity: 1; }
 </style>
