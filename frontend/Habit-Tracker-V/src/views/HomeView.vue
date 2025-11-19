@@ -5,7 +5,7 @@ const backendMessage = ref('Lade Daten vom Backend...');
 
 onMounted(async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/test');
+    const response = await fetch('/api/test');
 
     if (!response.ok) {
       throw new Error(`HTTP-Fehler! Status: ${response.status}`);

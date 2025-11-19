@@ -24,7 +24,7 @@ export const useHabitStore = defineStore('habits', () => {
   async function fetchHabits() {
     if (!authStore.token) return;
     try {
-      const res = await fetch('http://localhost:8000/api/habits', {
+      const res = await fetch('/api/habits', {
         headers: { 'Authorization': `Bearer ${authStore.token}` }
       });
       if (res.ok) {
@@ -38,7 +38,7 @@ export const useHabitStore = defineStore('habits', () => {
   async function addHabit(name: string, type: 'positive' | 'negative') {
     if (!authStore.token) return;
     try {
-      const res = await fetch('http://localhost:8000/api/habits', {
+      const res = await fetch('/api/habits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` },
         body: JSON.stringify({ name, type })
@@ -54,7 +54,7 @@ export const useHabitStore = defineStore('habits', () => {
   async function deleteHabit(id: string) {
     if (!authStore.token) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/habits/${id}`, {
+      const res = await fetch(`/api/habits/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${authStore.token}` }
       });
