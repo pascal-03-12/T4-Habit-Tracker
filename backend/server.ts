@@ -2,6 +2,7 @@ import { Application, Router, Context } from "https://deno.land/x/oak@v12.6.1/mo
 import { oakCors } from "https://deno.land/x/cors/mod.ts";
 import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 import { create, verify, getNumericDate } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
+import { send } from "https://deno.land/x/oak@v12.6.1/send.ts";
 
 const kv = await Deno.openKv();
 const app = new Application();
@@ -21,7 +22,6 @@ async function getUserIdFromContext(ctx: Context): Promise<string> {
   const payload = await verify(token, JWT_SECRET_KEY);
   return payload.sub as string;
 }
-
 
 router.get("/api/test", (ctx) => {
   ctx.response.body = { message: "Hallo vom Deno-Backend!" };
@@ -176,10 +176,20 @@ router.post("/api/habits/:id/entries", async (ctx) => {
   }
 });
 
-app.use(oakCors({ origin: "http://localhost:5173" }));
+app.use(async (ctx, next) => {
+  try {
+    await send(ctx, ctx.request.url.pathname, {
+      root: `${Deno.cwd()}/frontend/Habit-Tracker-V/dist`,
+      index: "index.html",
+    });
+  } catch {
+    await next();
+  }
+});
+
+app.use(oakCors({ origin: "*" }));
 app.use(router.routes());
 app.use(router.allowedMethods());
 
 console.log("Backend-Server startet auf http://localhost:8000 ...");
 await app.listen({ port: 8000 });
-// git nervt, du bist nicht aktuell!!!!!
