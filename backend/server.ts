@@ -139,15 +139,28 @@ router.patch("/api/habits/:id", async (ctx) => {
 router.delete("/api/habits/:id", async (ctx) => {
   try {
     const userId = await getUserIdFromContext(ctx);
-    const key = ["habits", userId, ctx.params.id];
+    const habitId = ctx.params.id;
+    const key = ["habits", userId, habitId];
+    
     const entry = await kv.get(key);
-    if (!entry.value) { ctx.response.status = 404; return; }
-    await kv.delete(key);
+    if (!entry.value) { 
+      ctx.response.status = 404; 
+      return; 
+    }
+    const entriesIter = kv.list({ prefix: ["entries", habitId] });
+    let atomic = kv.atomic();
+    atomic = atomic.delete(key);
+    for await (const entry of entriesIter) {
+      atomic = atomic.delete(entry.key);
+    }
+    await atomic.commit();
     ctx.response.status = 200;
-    ctx.response.body = { message: "Deleted" };
-  } catch (e) { ctx.response.status = 401; }
+    ctx.response.body = { message: "Habit und alle Einträge gelöscht" };
+  } catch (e) { 
+    console.error(e);
+    ctx.response.status = 401; 
+  }
 });
-
 router.post("/api/habits/:id/entries", async (ctx) => {
   try {
     await getUserIdFromContext(ctx);
