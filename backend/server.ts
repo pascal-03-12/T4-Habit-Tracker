@@ -22,7 +22,6 @@ const kv = await Deno.openKv();
 const app = new Application();
 const router = new Router();
 
-// feste Schlüssel verhindert, ungültige logins
 const STATIC_SECRET = "project-t4-final-static-secret-key-999";
 const encoder = new TextEncoder();
 const keyBuf = encoder.encode(STATIC_SECRET);
@@ -51,7 +50,7 @@ async function getUserIdFromContext(ctx: Context): Promise<string> {
   return payload.sub as string;
 }
 
-router.post("/api/register", async (ctx) => {
+router.post("/api/register", async (ctx: Context) => {
   try {
     const body = await ctx.request.body({ type: "json" }).value;
     const { email, password } = body;
@@ -75,7 +74,7 @@ router.post("/api/register", async (ctx) => {
   } catch (e) { ctx.response.status = 500; }
 });
 
-router.post("/api/login", async (ctx) => {
+router.post("/api/login", async (ctx: Context) => {
   try {
     const body = await ctx.request.body({ type: "json" }).value;
     const { email, password } = body;
@@ -89,7 +88,7 @@ router.post("/api/login", async (ctx) => {
   } catch (e) { ctx.response.status = 500; }
 });
 
-router.get("/api/habits", async (ctx) => {
+router.get("/api/habits", async (ctx: Context) => {
   try {
     const userId = await getUserIdFromContext(ctx);
     const iter = kv.list({ prefix: ["habits", userId] });
@@ -108,7 +107,7 @@ router.get("/api/habits", async (ctx) => {
   } catch (e) { ctx.response.status = 401; }
 });
 
-router.post("/api/habits", async (ctx) => {
+router.post("/api/habits", async (ctx: Context) => {
   try {
     const userId = await getUserIdFromContext(ctx);
     const body = await ctx.request.body({ type: "json" }).value;
@@ -125,7 +124,7 @@ router.post("/api/habits", async (ctx) => {
   } catch (e) { ctx.response.status = 401; }
 });
 
-router.patch("/api/habits/:id", async (ctx) => {
+router.patch("/api/habits/:id", async (ctx: Context) => {
   try {
     const userId = await getUserIdFromContext(ctx);
     const habitId = ctx.params.id;
@@ -141,7 +140,7 @@ router.patch("/api/habits/:id", async (ctx) => {
       ctx.response.status = 404;
       return;
     }
-    const habit = entry.value as any;
+    const habit = entry.value as Habit;;
     habit.name = name; 
     await kv.set(key, habit);
     ctx.response.status = 200;
@@ -151,7 +150,7 @@ router.patch("/api/habits/:id", async (ctx) => {
   }
 });
 
-router.delete("/api/habits/:id", async (ctx) => {
+router.delete("/api/habits/:id", async (ctx: Context) => {
   try {
     const userId = await getUserIdFromContext(ctx);
     const habitId = ctx.params.id;
@@ -176,7 +175,7 @@ router.delete("/api/habits/:id", async (ctx) => {
     ctx.response.status = 401; 
   }
 });
-router.post("/api/habits/:id/entries", async (ctx) => {
+router.post("/api/habits/:id/entries", async (ctx: Context) => {
   try {
     await getUserIdFromContext(ctx);
     const body = await ctx.request.body({ type: "json" }).value;
@@ -193,7 +192,7 @@ app.use(oakCors({ origin: "*" }));
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-app.use(async (ctx) => {
+app.use(async (ctx: Context) => {
   try {
     await send(ctx, ctx.request.url.pathname, { root: `${Deno.cwd()}/frontend/Habit-Tracker-V/dist`, index: "index.html" });
   } catch {

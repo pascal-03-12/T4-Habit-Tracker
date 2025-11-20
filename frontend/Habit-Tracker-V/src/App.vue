@@ -44,11 +44,12 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
 #app {
   max-width: 100%;
   margin: 0;
   padding: 0;
-  display: block !important; 
+  display: block;
   font-weight: normal;
 }
 </style>
@@ -64,35 +65,40 @@ header {
   top: 0;
   z-index: 100;
 }
+
 .wrapper {
   max-width: 900px;
   margin: 0 auto;
   padding: 0 1rem;
-  
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .app-title {
   font-weight: bold;
   font-size: 1.3rem;
   color: #4caf50; 
   letter-spacing: -0.5px;
 }
+
 nav {
   display: flex;
   align-items: center;
   gap: 20px;
 }
+
 nav a {
   text-decoration: none;
   color: #aaa;
   font-size: 0.95rem;
   transition: color 0.2s;
 }
+
 nav a:hover {
   color: white;
 }
+
 .logout-link {
   color: #e57373;
   border: 1px solid #e57373;
@@ -100,33 +106,27 @@ nav a:hover {
   border-radius: 4px;
   font-size: 0.85rem;
 }
+
 .logout-link:hover {
   background-color: #e57373;
   color: white;
 }
+
 .user-greeting {
   color: #666;
   font-size: 0.9rem;
   margin-right: 5px;
 }
+
 @media (max-width: 600px) {
   .user-greeting { display: none; }
   .wrapper { flex-direction: column; gap: 10px; }
 }
+
 .main-container {
   max-width: 900px; 
   margin: 0 auto;   
   padding: 0 1rem;  
   width: 100%;
-}
-body {
-  display: block !important; 
-  width: 100% !important;
-  margin: 0;
-}
-#app {
-  display: block !important;
-  max-width: 100% !important;
-  padding: 0 !important;
 }
 </style>
