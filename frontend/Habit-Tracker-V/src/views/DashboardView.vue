@@ -78,6 +78,19 @@ const renameHabit = async (habit: Habit) => {
           </div>
 
           <div class="habit-actions">
+            <div class="habit-history">
+            <span class="streak-count" v-if="habitStore.calculateStreak(habit) > 0">
+              🔥 {{ habitStore.calculateStreak(habit) }}
+            </span>
+            <div class="dots">
+              <span 
+                v-for="i in 5" 
+                :key="i"
+                class="dot"
+                :class="{ active: habitStore.isDoneOnDate(habit, i - 1) }"
+              ></span>
+            </div>
+          </div>
             
             <div v-if="isDoneToday(habit)" class="status-done">
               ✅ Erledigt!
@@ -167,4 +180,47 @@ ul { list-style: none; padding: 0; }
 .delete-icon:hover { opacity: 1; }
 .edit-icon {background: none;border: none;cursor: pointer;font-size: 1.2rem;opacity: 0.7;transition: opacity 0.2s;}
 .edit-icon:hover { opacity: 1;}
+
+.habit-card {
+  gap: 10px; 
+}
+
+.habit-history {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (min-width: 600px) {
+  .habit-history {
+    flex-direction: row;
+    gap: 10px;
+  }
+}
+
+.streak-count {
+  font-size: 0.9rem;
+  color: #ff9800;
+  font-weight: bold;
+}
+
+.dots {
+  display: flex;
+  gap: 4px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #333;
+  border: 1px solid #444;
+}
+
+.dot.active {
+  background-color: #4caf50;
+  border-color: #66bb6a;
+  box-shadow: 0 0 5px #4caf50;
+}
 </style>
