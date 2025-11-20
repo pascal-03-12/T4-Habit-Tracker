@@ -201,4 +201,4 @@ app.use(async (ctx: Context) => {
 });
 
 console.log("Server running...");
-await app.listen({ port: 8000 });
+await app.listen({ port: 8000, hostname: '0.0.0.0' });
