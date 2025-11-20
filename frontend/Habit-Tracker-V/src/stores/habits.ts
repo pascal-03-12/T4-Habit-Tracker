@@ -67,6 +67,27 @@ export const useHabitStore = defineStore('habits', () => {
     } catch (err) { console.error(err); }
   }
 
+  async function updateHabitName(id: string, newName: string) {
+    if (!authStore.token) return;
+    try {
+      const res = await fetch(`/api/habits/${id}`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${authStore.token}` 
+        },
+        body: JSON.stringify({ name: newName })
+      });
+
+      if (res.ok) {
+        const habit = habits.value.find(h => h.id === id);
+        if (habit) {
+          habit.name = newName;
+        }
+      }
+    } catch (err) { console.error(err); }
+  }
+
   async function deleteHabit(id: string) {
     if (!authStore.token) return;
     try {
@@ -100,5 +121,5 @@ export const useHabitStore = defineStore('habits', () => {
     } catch (err) { console.error(err); }
   }
 
-  return { habits, fetchHabits, addHabit, deleteHabit, trackHabit, getTodayString };
+  return { habits, fetchHabits, addHabit,updateHabitName, deleteHabit, trackHabit, getTodayString };
 });

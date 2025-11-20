@@ -23,6 +23,13 @@ const isDoneToday = (habit: Habit) => {
   const today = habitStore.getTodayString();
   return habit.entries.some((e) => e.date === today);
 };
+
+const renameHabit = async (habit: Habit) => {
+  const newName = prompt("Neuer Name für das Habit:", habit.name);
+  if (newName && newName.trim() !== "" && newName !== habit.name) {
+    await habitStore.updateHabitName(habit.id, newName);
+  }
+};
 </script>
 
 <template>
@@ -93,7 +100,9 @@ const isDoneToday = (habit: Habit) => {
                 ⛔ Verzicht eintragen
               </button>
             </div>
-
+            <button @click="renameHabit(habit)" class="edit-icon" title="Umbenennen" style="margin-right: 5px;">
+              ✏️
+            </button>
             <button @click="habitStore.deleteHabit(habit.id)" class="delete-icon" title="Löschen">
               🗑️
             </button>
@@ -145,21 +154,17 @@ ul { list-style: none; padding: 0; }
 }
 
 .habit-info { display: flex; flex-direction: column; gap: 5px; }
-@media (min-width: 600px) {
-  .habit-info { flex-direction: row; align-items: center; gap: 15px; }
-}
-
+@media (min-width: 600px) {.habit-info { flex-direction: row; align-items: center; gap: 15px; }}
 .badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
 .badge.positive { background-color: #1b5e20; color: #a5d6a7; border: 1px solid #2e7d32; }
 .badge.negative { background-color: #b71c1c; color: #ef9a9a; border: 1px solid #c62828; }
-
 .habit-actions { display: flex; align-items: center; gap: 10px; }
-
 .track-btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; color: white; }
 .track-btn.positive { background-color: #2e7d32; }
 .track-btn.negative { background-color: #1565c0; }
-
 .status-done { color: #66bb6a; font-weight: bold; border: 1px solid #66bb6a; padding: 5px 10px; border-radius: 4px; }
 .delete-icon { background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.7; }
 .delete-icon:hover { opacity: 1; }
+.edit-icon {background: none;border: none;cursor: pointer;font-size: 1.2rem;opacity: 0.7;transition: opacity 0.2s;}
+.edit-icon:hover { opacity: 1;}
 </style>

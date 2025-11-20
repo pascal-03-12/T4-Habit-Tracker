@@ -110,6 +110,32 @@ router.post("/api/habits", async (ctx) => {
   } catch (e) { ctx.response.status = 401; }
 });
 
+router.patch("/api/habits/:id", async (ctx) => {
+  try {
+    const userId = await getUserIdFromContext(ctx);
+    const habitId = ctx.params.id;
+    const body = await ctx.request.body({ type: "json" }).value;
+    const { name } = body;
+    if (!name) {
+      ctx.response.status = 400;
+      return;
+    }
+    const key = ["habits", userId, habitId];
+    const entry = await kv.get(key);
+    if (!entry.value) {
+      ctx.response.status = 404;
+      return;
+    }
+    const habit = entry.value as any;
+    habit.name = name; 
+    await kv.set(key, habit);
+    ctx.response.status = 200;
+    ctx.response.body = habit;
+  } catch (e) {
+    ctx.response.status = 401;
+  }
+});
+
 router.delete("/api/habits/:id", async (ctx) => {
   try {
     const userId = await getUserIdFromContext(ctx);
