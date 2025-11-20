@@ -119,7 +119,6 @@ nav a:hover {
   padding: 0 1rem;  
   width: 100%;
 }
-<style>
 body {
   display: block !important; 
   width: 100% !important;

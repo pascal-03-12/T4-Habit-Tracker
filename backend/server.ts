@@ -3,6 +3,21 @@ import { oakCors } from "https://deno.land/x/cors/mod.ts";
 import { create, verify, getNumericDate } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 import { send } from "https://deno.land/x/oak@v12.6.1/send.ts";
 
+interface User {
+  id: string;
+  email: string;
+  hashedPassword: string;
+}
+
+interface Habit {
+  id: string;
+  userId: string;
+  name: string;
+  type: string;
+  createdAt: string;
+  entries: any[];
+}
+
 const kv = await Deno.openKv();
 const app = new Application();
 const router = new Router();
@@ -66,7 +81,7 @@ router.post("/api/login", async (ctx) => {
     const { email, password } = body;
     const userEntry = await kv.get(["users", email]);
     if (!userEntry.value) { ctx.response.status = 401; return; }
-    const user = userEntry.value as any;
+    const user = userEntry.value as User;
     if (!(await verifyPassword(password, user.hashedPassword))) { ctx.response.status = 401; return; }
     
     const jwt = await create({ alg: "HS512", typ: "JWT" }, { iss: "habit-app", sub: user.id, exp: getNumericDate(60 * 60 * 24 * 7) }, JWT_SECRET_KEY);
@@ -80,7 +95,7 @@ router.get("/api/habits", async (ctx) => {
     const iter = kv.list({ prefix: ["habits", userId] });
     const habits = [];
     for await (const entry of iter) {
-      const habit = entry.value as any;
+      const habit = entry.value as Habit;
       try {
         const entriesIter = kv.list({ prefix: ["entries", habit.id] });
         const entries = [];

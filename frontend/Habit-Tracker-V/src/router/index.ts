@@ -1,14 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import LoginView from '../views/LoginView.vue' 
-import { useAuthStore } from '@/stores/auth'
 import DashboardView from '../views/DashboardView.vue' 
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'home', component: HomeView },
+    { 
+      path: '/', 
+      name: 'home', 
+      redirect: '/dashboard' 
+    },
     { path: '/register', name: 'register', component: RegisterView },
     { path: '/login', name: 'login', component: LoginView },
     { path: '/about', name: 'about', component: () => import('../views/AboutView.vue') },
@@ -22,18 +25,15 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAuth) {
+  const authStore = useAuthStore() 
 
-    const authStore = useAuthStore() 
-
-    if (authStore.isAuthenticated) {
-      next()
-    } else {
-      console.log("Zugriff verweigert. Leite zum Login weiter.");
-      next('/login')
-    }
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
+  } else if (to.path === '/login' && authStore.isAuthenticated) {
+    next('/dashboard')
   } else {
     next()
   }
 })
+
 export default router
