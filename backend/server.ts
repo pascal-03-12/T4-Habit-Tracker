@@ -3,12 +3,12 @@ import { oakCors } from "https://deno.land/x/cors/mod.ts";
 import { create, verify, getNumericDate } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 import { send } from "https://deno.land/x/oak@v12.6.1/send.ts";
 
+// --- Interfaces ---
 interface User {
   id: string;
   email: string;
   hashedPassword: string;
 }
-
 interface Habit {
   id: string;
   userId: string;
@@ -17,11 +17,11 @@ interface Habit {
   createdAt: string;
   entries: any[];
 }
-
 const kv = await Deno.openKv();
 const app = new Application();
 const router = new Router();
 
+// --- Konfiguration (JWT & Hashing) ---
 const STATIC_SECRET = "project-t4-final-static-secret-key-999";
 const encoder = new TextEncoder();
 const keyBuf = encoder.encode(STATIC_SECRET);
@@ -31,6 +31,7 @@ const JWT_SECRET_KEY = await crypto.subtle.importKey(
 
 const SALT = "habit-salt-v2";
 
+// --- Passwort-Dienst ---
 async function hashPassword(password: string): Promise<string> {
   const data = encoder.encode(password + SALT);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
@@ -42,6 +43,7 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
   return newHash === hash;
 }
 
+// --- JWT Authentifizierung ---
 async function getUserIdFromContext(ctx: Context): Promise<string> {
   const authHeader = ctx.request.headers.get("Authorization");
   if (!authHeader) throw new Error("No token");
@@ -50,6 +52,7 @@ async function getUserIdFromContext(ctx: Context): Promise<string> {
   return payload.sub as string;
 }
 
+// --- Benutzer-Routen (Registrierung & Login) ---
 router.post("/api/register", async (ctx: Context) => {
   try {
     const body = await ctx.request.body({ type: "json" }).value;
@@ -74,6 +77,7 @@ router.post("/api/register", async (ctx: Context) => {
   } catch (e) { ctx.response.status = 500; }
 });
 
+// --- Habit-Routen (CRUD) ---
 router.post("/api/login", async (ctx: Context) => {
   try {
     const body = await ctx.request.body({ type: "json" }).value;
@@ -107,6 +111,7 @@ router.get("/api/habits", async (ctx: Context) => {
   } catch (e) { ctx.response.status = 401; }
 });
 
+// --- Habit Entry-Routen ---
 router.post("/api/habits", async (ctx: Context) => {
   try {
     const userId = await getUserIdFromContext(ctx);
@@ -188,6 +193,7 @@ router.post("/api/habits/:id/entries", async (ctx: Context) => {
   } catch (e) { ctx.response.status = 500; }
 });
 
+// --- Oak Middleware & Start ---
 app.use(oakCors({ origin: "*" }));
 app.use(router.routes());
 app.use(router.allowedMethods());

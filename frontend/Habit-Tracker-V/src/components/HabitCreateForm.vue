@@ -2,11 +2,14 @@
 import { ref } from 'vue';
 import { useHabitStore } from '@/stores/habits';
 
+// --- Store Initialisierung ---
 const habitStore = useHabitStore();
 
+// --- Reactive State ---
 const name = ref('');
 const type = ref<'positive' | 'negative'>('positive');
 
+// --- Logik (Habit erstellen) ---
 const submitHabit = async () => {
   if (!name.value.trim()) return;
   await habitStore.addHabit(name.value, type.value);

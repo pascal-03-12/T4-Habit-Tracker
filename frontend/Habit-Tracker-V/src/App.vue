@@ -2,8 +2,8 @@
 import { RouterLink, RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
+// --- Store und Funktionen ---
 const authStore = useAuthStore()
-
 const handleLogout = () => {
   authStore.logout()
 }

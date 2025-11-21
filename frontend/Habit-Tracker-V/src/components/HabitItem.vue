@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { type Habit, useHabitStore } from '@/stores/habits';
+
+// --- Props & Store ---
 const props = defineProps<{
   habit: Habit
 }>();
-
 const habitStore = useHabitStore();
 
+// --- Logik (Umbenennen) ---
 const renameHabit = async () => {
   const newName = prompt("Name ändern:", props.habit.name);
   if (newName && newName.trim() !== "" && newName !== props.habit.name) {
@@ -13,6 +15,7 @@ const renameHabit = async () => {
   }
 };
 
+// --- Logik (Löschen) ---
 const confirmDelete = async () => {
   if (confirm(`Willst du "${props.habit.name}" wirklich unwiderruflich löschen?`)) {
     await habitStore.deleteHabit(props.habit.id);
