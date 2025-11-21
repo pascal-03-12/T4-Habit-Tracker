@@ -1,14 +1,11 @@
+FROM node:20-alpine AS build_stage 
 
-FROM node:20-alpine AS build_stage
+WORKDIR /app/frontend/Habit-Tracker-V
 
-WORKDIR /app/frontend
-
-
-COPY frontend/package*.json ./
-
+COPY frontend/Habit-Tracker-V/package*.json .
 RUN npm install
 
-COPY frontend/ ./
+COPY frontend/Habit-Tracker-V/ .
 RUN npm run build
 
 FROM denoland/deno:alpine-1.40.0
@@ -17,7 +14,7 @@ WORKDIR /app
 
 COPY backend/server.ts .
 
-COPY --from=build_stage /app/frontend/dist ./frontend/Habit-Tracker-V/dist
+COPY --from=build_stage /app/frontend/Habit-Tracker-V/dist ./frontend/Habit-Tracker-V/dist
 
 RUN deno cache server.ts
 
